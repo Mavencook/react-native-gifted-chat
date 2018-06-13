@@ -36,6 +36,30 @@ export default class MessageContainer extends React.PureComponent {
     return null;
   }
 
+  prepareMessages(messages) {
+    const { inverted } = this.props;
+    return {
+      keys: messages.map((m) => m._id),
+      blob: messages.reduce((o, m, i) => {
+        const previousMessage = inverted ? (messages[i + 1] || {}) : (messages[i - 1] || {});
+        const nextMessage = inverted ? (messages[i - 1] || {}) : (messages[i + 1] || {});
+        // add next and previous messages to hash to ensure updates
+        const toHash = JSON.stringify(m) + previousMessage._id + nextMessage._id;
+        o[m._id] = {
+          ...m,
+          previousMessage,
+          nextMessage,
+          hash: md5(toHash),
+        };
+        return o;
+      }, {}),
+    };
+  }
+
+  scrollTo(options) {
+    this._invertibleScrollViewRef.scrollTo(options);
+  }
+
   renderLoadEarlier() {
     if (this.props.loadEarlier === true) {
       const loadEarlierProps = {
